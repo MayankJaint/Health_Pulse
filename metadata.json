@@ -1,0 +1,7 @@
+{
+  "name": "HealthPulse AI",
+  "description": "An advanced health risk predictor that analyzes lifestyle factors using the Gemini API to provide personalized health insights, risk assessments, and actionable lifestyle recommendations.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
