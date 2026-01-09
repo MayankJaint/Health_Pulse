@@ -1,13 +1,14 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserHealthData, RiskAnalysis, MLModel, MLDataset } from "../types";
+import { UserHealthData, RiskAnalysis, MLDataset } from "../types";
 
-const API_KEY = process.env.API_KEY || "";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 
-export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskAnalysis> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
-  
-  const bmi = userData.weight / ((userData.height / 100) ** 2);
+export const analyzeHealthRisk = async (
+  userData: UserHealthData
+): Promise<RiskAnalysis> => {
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+  const bmi = userData.weight / (userData.height / 100) ** 2;
   let bmiCategory = "Normal";
   if (bmi < 18.5) bmiCategory = "Underweight";
   else if (bmi < 25) bmiCategory = "Normal";
@@ -26,26 +27,45 @@ export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskA
     - Alcohol: ${userData.alcohol}
     - Exercise: ${userData.exercise}
     - Diet: ${userData.diet}
-    - Family History: ${userData.familyHistory ? 'Yes' : 'No'}
+    - Family History: ${userData.familyHistory ? "Yes" : "No"}
     
     ML ENGINE CONFIGURATION:
     - Algorithm: ${userData.mlModel}
-    - Simulation Dataset: ${isCustomDataset ? 'Provided Custom CSV' : userData.devSettings.dataset}
-    ${userData.devSettings.customContext ? `- Custom Training Context: ${userData.devSettings.customContext}` : ''}
-    ${isCustomDataset && userData.devSettings.customDatasetContent ? `
+    - Simulation Dataset: ${
+      isCustomDataset ? "Provided Custom CSV" : userData.devSettings.dataset
+    }
+    ${
+      userData.devSettings.customContext
+        ? `- Custom Training Context: ${userData.devSettings.customContext}`
+        : ""
+    }
+    ${
+      isCustomDataset && userData.devSettings.customDatasetContent
+        ? `
     - CUSTOM DATASET RAW CONTENT (CSV):
     --- START CSV ---
-    ${userData.devSettings.customDatasetContent.slice(0, 5000)} ... (truncated for token limits)
+    ${userData.devSettings.customDatasetContent.slice(
+      0,
+      5000
+    )} ... (truncated for token limits)
     --- END CSV ---
-    ` : ''}
+    `
+        : ""
+    }
 
     Simulate the prediction logic of the ${userData.mlModel} model. 
-    ${isCustomDataset ? 'Analyze the correlations and patterns found in the CUSTOM DATASET RAW CONTENT above to inform the health risk assessment.' : `Simulate the model as if it were trained on the ${userData.devSettings.dataset} dataset.`}
+    ${
+      isCustomDataset
+        ? "Analyze the correlations and patterns found in the CUSTOM DATASET RAW CONTENT above to inform the health risk assessment."
+        : `Simulate the model as if it were trained on the ${userData.devSettings.dataset} dataset.`
+    }
     Use any provided Custom Training Context to calibrate weights.
 
     Provide:
     1. Overall riskScore (0-100) and riskLevel (Low/Moderate/High).
-    2. Detailed summary explaining how the chosen model (${userData.mlModel}) and dataset arrived at these specific conclusions. Mention correlations found in the data.
+    2. Detailed summary explaining how the chosen model (${
+      userData.mlModel
+    }) and dataset arrived at these specific conclusions. Mention correlations found in the data.
     3. Specific dietPlan with doEat, avoid, meal plan, and 2 recipes.
     4. lifestyleScore (0-100).
     5. riskDimensions: An array of 5 objects {name, value} representing risk intensity in: Cardiovascular, Metabolic, Respiratory, Mental Health, and Physical Vitality.
@@ -74,10 +94,10 @@ export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskA
               type: Type.OBJECT,
               properties: {
                 name: { type: Type.STRING },
-                value: { type: Type.NUMBER }
+                value: { type: Type.NUMBER },
               },
-              required: ["name", "value"]
-            }
+              required: ["name", "value"],
+            },
           },
           modelMetrics: {
             type: Type.OBJECT,
@@ -85,9 +105,9 @@ export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskA
               accuracy: { type: Type.NUMBER },
               precision: { type: Type.NUMBER },
               recall: { type: Type.NUMBER },
-              f1Score: { type: Type.NUMBER }
+              f1Score: { type: Type.NUMBER },
             },
-            required: ["accuracy", "precision", "recall", "f1Score"]
+            required: ["accuracy", "precision", "recall", "f1Score"],
           },
           healthComparison: {
             type: Type.ARRAY,
@@ -96,10 +116,10 @@ export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskA
               properties: {
                 category: { type: Type.STRING },
                 userScore: { type: Type.NUMBER },
-                idealScore: { type: Type.NUMBER }
+                idealScore: { type: Type.NUMBER },
               },
-              required: ["category", "userScore", "idealScore"]
-            }
+              required: ["category", "userScore", "idealScore"],
+            },
           },
           dietPlan: {
             type: Type.OBJECT,
@@ -113,9 +133,9 @@ export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskA
                   breakfast: { type: Type.STRING },
                   lunch: { type: Type.STRING },
                   dinner: { type: Type.STRING },
-                  snacks: { type: Type.STRING }
+                  snacks: { type: Type.STRING },
                 },
-                required: ["breakfast", "lunch", "dinner", "snacks"]
+                required: ["breakfast", "lunch", "dinner", "snacks"],
               },
               recipes: {
                 type: Type.ARRAY,
@@ -123,39 +143,71 @@ export const analyzeHealthRisk = async (userData: UserHealthData): Promise<RiskA
                   type: Type.OBJECT,
                   properties: {
                     name: { type: Type.STRING },
-                    ingredients: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    benefits: { type: Type.STRING }
+                    ingredients: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
+                    },
+                    benefits: { type: Type.STRING },
                   },
-                  required: ["name", "ingredients", "benefits"]
-                }
-              }
+                  required: ["name", "ingredients", "benefits"],
+                },
+              },
             },
-            required: ["summary", "doEat", "avoid", "sampleMealPlan", "recipes"]
-          }
+            required: [
+              "summary",
+              "doEat",
+              "avoid",
+              "sampleMealPlan",
+              "recipes",
+            ],
+          },
         },
-        required: ["riskScore", "riskLevel", "summary", "topRisks", "recommendations", "lifestyleScore", "dietPlan", "riskDimensions", "modelMetrics", "healthComparison"]
-      }
-    }
+        required: [
+          "riskScore",
+          "riskLevel",
+          "summary",
+          "topRisks",
+          "recommendations",
+          "lifestyleScore",
+          "dietPlan",
+          "riskDimensions",
+          "modelMetrics",
+          "healthComparison",
+        ],
+      },
+    },
   });
 
   const analysis = JSON.parse(response.text || "{}");
-  
+
   return {
     ...analysis,
     metrics: {
       bmi,
-      bmiCategory
-    }
+      bmiCategory,
+    },
   };
 };
 
-export const getChatResponse = async (history: {role: 'user' | 'model', text: string}[], message: string) => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+export const getChatResponse = async (
+  history: { role: "user" | "model"; text: string }[],
+  message: string
+) => {
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+  // Convert history to the format expected by the SDK
+  const formattedHistory = history.map((msg) => ({
+    role: msg.role,
+    parts: [{ text: msg.text }],
+  }));
+
   const chat = ai.chats.create({
-    model: 'gemini-3-pro-preview',
+    model: "gemini-2.0-flash",
     config: {
-      systemInstruction: "You are Dr. Whiskers, a senior cat doctor AI. Help the user understand their report. Keep responses very summarized, brief, and to the point. Maximum 3 sentences unless specifically asked for detail. Use light cat puns. Always include a brief disclaimer: 'Disclaimer: I am an AI, not a human doctor. Consult a professional.'"
-    }
+      systemInstruction:
+        "You are Dr. Whiskers, a senior cat doctor AI. Help the user understand their report. Keep responses very summarized, brief, and to the point. Maximum 3 sentences unless specifically asked for detail. Use light cat puns. Always include a brief disclaimer: 'Disclaimer: I am an AI, not a human doctor. Consult a professional.'",
+    },
+    history: formattedHistory,
   });
   const response = await chat.sendMessage({ message });
   return response.text;

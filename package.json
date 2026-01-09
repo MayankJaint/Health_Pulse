@@ -12,13 +12,12 @@
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "@google/generative-ai": "^1.35.0",
+    "@google/genai": "^1.35.0",
     "recharts": "^3.6.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "^5.8.2",
-    "vite": "^6.2.0"
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }
-
